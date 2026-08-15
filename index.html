@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>charly-ubuntu — Debian package repository for charly</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    code { background: #f4f4f4; padding: 0.1rem 0.3rem; border-radius: 4px; }
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 0.4rem 0.8rem; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>charly-ubuntu</h1>
+  <p>The Debian package repository for <a href="https://github.com/opencharly/charly">charly</a> — the OpenCharly CLI and its composed toolchain, packaged as <code>.deb</code> for <code>amd64</code> and <code>arm64</code>.</p>
+
+  <h2>Add the repository</h2>
+  <pre>curl -fsSL https://opencharly.github.io/charly-ubuntu/charly.gpg | gpg --dearmor -o /etc/apt/keyrings/charly.gpg
+echo "deb [signed-by=/etc/apt/keyrings/charly.gpg] https://opencharly.github.io/charly-ubuntu/ stable main" > /etc/apt/sources.list.d/charly.list
+apt update
+apt install charly</pre>
+
+  <h2>Direct install</h2>
+  <table>
+    <tr><th>Architecture</th><th>Package</th></tr>
+    <tr><td>amd64</td><td><a href="pool/main/c/charly/charly-amd64.deb">charly-amd64.deb</a></td></tr>
+    <tr><td>arm64</td><td><a href="pool/main/c/charly/charly-arm64.deb">charly-arm64.deb</a></td></tr>
+  </table>
+
+  <h2>Variants</h2>
+  <table>
+    <tr><th>Package</th><th>Plugin set</th></tr>
+    <tr><td><code>charly</code></td><td>secrets, feature, vm, doctor, clean, settings, candy</td></tr>
+    <tr><td><code>charly-full</code></td><td>the default set + udev, preempt</td></tr>
+    <tr><td><code>charly-minimal</code></td><td>doctor, clean, settings</td></tr>
+  </table>
+
+  <h2>Repository key</h2>
+  <p><a href="charly.gpg">charly.gpg</a> — the GPG public key (dearmored) used to sign the packages and the <code>Release</code> metadata.</p>
+</body>
+</html>
