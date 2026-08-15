@@ -95,7 +95,13 @@ jobs:
             gpg --batch --import /ws/key.gpg
             for arch in amd64 arm64; do
               mkdir -p /ws/dists/stable/main/binary-$arch
-              apt-ftparchive packages /ws/pool > /ws/dists/stable/main/binary-$arch/Packages
+              # apt-ftparchive packages indexes the WHOLE pool; filter to the
+              # arch so binary-<arch>/Packages contains only that arch's debs.
+              apt-ftparchive packages /ws/pool | awk -v want="$arch" '
+                BEGIN { RS = ""; FS = "\n" }
+                { for (i = 1; i <= NF; i++) if ($i ~ /^Architecture: /) a = substr($i, 15)
+                  if (a == want) print $0 "\n" }
+              ' > /ws/dists/stable/main/binary-$arch/Packages
               gzip -k /ws/dists/stable/main/binary-$arch/Packages
             done
             apt-ftparchive -o APT::FTPArchive::Release::Origin=charly release /ws/dists/stable > /ws/dists/stable/Release
