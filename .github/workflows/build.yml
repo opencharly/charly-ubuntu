@@ -124,7 +124,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          docker run --rm -v "${{ github.workspace }}:/ws:ro" ubuntu:24.04 bash -c '
+          docker run --rm -e VERSION="$VERSION" -v "${{ github.workspace }}:/ws:ro" ubuntu:24.04 bash -c '
             set -e
             echo "deb [signed-by=/ws/charly.gpg] file:///ws stable main" > /etc/apt/sources.list.d/charly.list
             apt-get update
