@@ -102,18 +102,26 @@ jobs:
             export GNUPGHOME=/tmp/gnupg
             mkdir -p $GNUPGHOME && chmod 700 $GNUPGHOME
             gpg --batch --import /ws/key.gpg
+            cd /ws
             for arch in amd64 arm64; do
-              mkdir -p /ws/dists/stable/main/binary-$arch
+              mkdir -p dists/stable/main/binary-$arch
               # apt-ftparchive packages indexes the WHOLE pool; filter to the
               # arch so binary-<arch>/Packages contains only that arch's debs.
-              apt-ftparchive packages /ws/pool | awk -v want="$arch" '
+              # The pool path MUST be relative (cwd=/ws): an absolute path
+              # makes apt-ftparchive emit an absolute Filename, which apt then
+              # prepends the file:// base to, doubling it (/ws//ws/pool/...).
+              apt-ftparchive packages pool | awk -v want="$arch" '
                 BEGIN { RS = ""; FS = "\n" }
                 { for (i = 1; i <= NF; i++) if ($i ~ /^Architecture: /) a = substr($i, 15)
                   if (a == want) print $0 "\n" }
-              ' > /ws/dists/stable/main/binary-$arch/Packages
-              gzip -k /ws/dists/stable/main/binary-$arch/Packages
+              ' > dists/stable/main/binary-$arch/Packages
+              gzip -k dists/stable/main/binary-$arch/Packages
             done
-            apt-ftparchive -o APT::FTPArchive::Release::Origin=charly release /ws/dists/stable > /ws/dists/stable/Release
+            # Suite/Codename are required or apt warns "Conflicting distribution".
+            apt-ftparchive -o APT::FTPArchive::Release::Origin=charly \
+              -o APT::FTPArchive::Release::Suite=stable \
+              -o APT::FTPArchive::Release::Codename=stable \
+              release dists/stable > dists/stable/Release
             gpg --batch --yes --pinentry-mode loopback \
               --passphrase-file <(echo "$GPG_PASSPHRASE") \
               --clearsign -o /ws/dists/stable/InRelease /ws/dists/stable/Release
