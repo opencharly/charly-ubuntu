@@ -89,7 +89,10 @@ jobs:
           # The awk filter uses single quotes, which would terminate a
           # bash -c '...' argument — feed the script via a quoted heredoc
           # so the container's bash receives it verbatim.
-          docker run --rm -v "${{ github.workspace }}:/ws:rw" \
+          # -i is required: without it docker does not attach stdin, so the
+          # heredoc body never reaches the container's bash and the step
+          # "passes" while doing nothing.
+          docker run --rm -i -v "${{ github.workspace }}:/ws:rw" \
             -e GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
             ubuntu:24.04 bash <<'EOF'
             set -e
