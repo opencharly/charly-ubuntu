@@ -90,6 +90,9 @@ jobs:
             -e GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
             ubuntu:24.04 bash -c '
             set -e
+            # The base image ships neither gpg nor apt-ftparchive (they live in
+            # gnupg/apt-utils) — install them before assembling the repo.
+            apt-get update && apt-get install -y --no-install-recommends gnupg apt-utils
             export GNUPGHOME=/tmp/gnupg
             mkdir -p $GNUPGHOME && chmod 700 $GNUPGHOME
             gpg --batch --import /ws/key.gpg
