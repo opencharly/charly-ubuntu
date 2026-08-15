@@ -86,9 +86,12 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          # The awk filter uses single quotes, which would terminate a
+          # bash -c '...' argument — feed the script via a quoted heredoc
+          # so the container's bash receives it verbatim.
           docker run --rm -v "${{ github.workspace }}:/ws:rw" \
             -e GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
-            ubuntu:24.04 bash -c '
+            ubuntu:24.04 bash <<'EOF'
             set -e
             # The base image ships neither gpg nor apt-ftparchive (they live in
             # gnupg/apt-utils) — install them before assembling the repo.
@@ -114,7 +117,7 @@ jobs:
             gpg --batch --yes --pinentry-mode loopback \
               --passphrase-file <(echo "$GPG_PASSPHRASE") \
               -abs -o /ws/dists/stable/Release.gpg /ws/dists/stable/Release
-          '
+          EOF
 
       - name: Create stable copies
         run: |
