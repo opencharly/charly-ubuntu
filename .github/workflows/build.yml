@@ -150,8 +150,13 @@ jobs:
             cd /tmp && charly doctor
           '
 
-      - name: Remove the signing key before deploy
-        run: rm -f key.gpg
+      - name: Remove the signing key + build artifacts before deploy
+        run: |
+          # The upload path is . (the apt repo root IS the workspace root), so
+          # the downloaded binaries, plugin tarballs, and extracted plugins must
+          # be removed or the Pages artifact exceeds the 1 GB limit.
+          rm -f key.gpg charly-plugins-linux-*.tar.gz charly-candy-charly.yml
+          rm -rf bin plugins
 
       - name: Deploy to Pages
         uses: actions/configure-pages@v5
