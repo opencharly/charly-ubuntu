@@ -203,7 +203,11 @@ jobs:
             test -x /usr/lib/charly/plugins/charly-lib || { echo "charly-lib shared host missing"; exit 1; }
             _link=$(ls /usr/lib/charly/plugins/plugin-* 2>/dev/null | grep -v "\.providers$" | head -1)
             test -n "$_link" && test "$(readlink "$_link")" = "charly-lib" || { echo "plugin symlink -> charly-lib missing"; exit 1; }
-            echo "shared-host layout OK"
+            # LOAD: charly connects a baked plugin THROUGH the symlinked host (the
+            # cutover real risk) - captured without printing host-health noise.
+            _doctor=$(charly doctor 2>&1) || true
+            printf "%s" "$_doctor" | grep -q "served from baked binary" || { echo "the installed shared host did not load a baked plugin"; exit 1; }
+            echo "shared-host layout + plugin load OK"
           '
 
       - name: Remove the signing key + build artifacts before deploy
@@ -212,7 +216,7 @@ jobs:
           # the downloaded binaries, plugin tarballs, and extracted plugins must
           # be removed or the Pages artifact exceeds the 1 GB limit.
           rm -f key.gpg charly-candy-charly.yml
-          rm -rf bin plugins
+          rm -rf bin plugins .charly-lib
 
       - name: Deploy to Pages
         uses: actions/configure-pages@v5
