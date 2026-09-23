@@ -1,0 +1,129 @@
+# charly-ubuntu — the Ubuntu package repository for charly.
+#
+# This project exists so this repo OWNS the R10 bed that proves its own
+# published artifact: check-ubuntu-repo boots a disposable Ubuntu 24.04 cloud
+# VM, adds the published charly apt repo (opencharly.github.io/charly-ubuntu),
+# installs the packaged charly, and asserts the installed binary's version
+# equals the version the package manager recorded. The bed was relocated here
+# from opencharly/charly's charly.yml — the artifact owner is the repo that
+# publishes the repo.
+version: 2026.249.2125
+repo: github.com/opencharly/charly-ubuntu
+defaults:
+    platform:
+        - linux/amd64
+    tag: auto
+    registry: ghcr.io/opencharly
+    build:
+        - deb
+    merge:
+        auto: false
+        max_mb: 128
+
+# ubuntu-repo-vm — the disposable Ubuntu 24.04 cloud-image VM the bed boots.
+ubuntu-repo-vm:
+    vm:
+        source:
+            kind: cloud_image
+            url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+            base_user: ubuntu
+            # REQUIRED, not decorative: sshUnitForDistro + composePackages are bare
+            # lookups into the generated distro tables — nothing is inferred from
+            # base_user, so omitting this renders an EMPTY sshd unit name and the
+            # wrong package name on a Debian-family guest.
+            distro: ubuntu
+        backend: libvirt
+        disk_size: 20G
+        ram: 4G
+        cpu: 2
+        machine: q35
+        firmware: uefi-insecure
+        ssh:
+            port_auto: true
+            key_source: generate
+        cloud_init:
+            timezone: UTC
+            package:
+                - sudo
+check-ubuntu-repo:
+    vm:
+        from: ubuntu-repo-vm
+        disposable: true
+        lifecycle: dev
+        description: >-
+            Proves the repo-based install from the published charly-ubuntu apt repo (opencharly.github.io/charly-ubuntu) — the R10 acceptance for the nFPM packaging cutover's Ubuntu leg. Boots the disposable Ubuntu 24.04 (noble) cloud-image VM (ubuntu-repo-vm), installs the charly GPG key + adds the apt repo, `apt install charly`, asserts the PACKAGED /usr/bin/charly reports the same version the package manager recorded for the installed package, and proves the welded command plugins dispatch project-less from /tmp.
+        install_opts:
+            allow_repo_changes: true
+            allow_root_tasks: true
+        plan:
+            - check: curl + gnupg are available for the key import
+              id: ubuntu-key-tooling
+              timeout: 10m
+              exit_status: 0
+              context:
+                - runtime
+              command: |
+                sudo apt-get update &&
+                sudo apt-get install -y curl gnupg
+            - check: the charly GPG key is dearmored into /etc/apt/keyrings
+              id: ubuntu-repo-key-installed
+              exit_status: 0
+              context:
+                - runtime
+              command: |
+                sudo mkdir -p /etc/apt/keyrings &&
+                curl -fsSL https://opencharly.github.io/charly-ubuntu/charly.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/charly.gpg &&
+                test -s /etc/apt/keyrings/charly.gpg
+            - check: the charly apt repo is added
+              id: ubuntu-repo-added
+              exit_status: 0
+              context:
+                - runtime
+              command: |
+                echo 'deb [signed-by=/etc/apt/keyrings/charly.gpg] https://opencharly.github.io/charly-ubuntu/ stable main' | sudo tee /etc/apt/sources.list.d/charly.list >/dev/null &&
+                grep -q 'charly-ubuntu' /etc/apt/sources.list.d/charly.list
+            - check: apt-get update resolves the charly repo
+              id: ubuntu-apt-update
+              timeout: 10m
+              exit_status: 0
+              context:
+                - runtime
+              # apt-get update can exit 0 with only a warning for a failed repo;
+              # a Candidate version can only come from the charly repo.
+              command: |
+                sudo apt-get update &&
+                apt-cache policy charly | grep -qE 'Candidate: [0-9]'
+            - check: apt-get install charly installs the package
+              id: ubuntu-charly-installed
+              timeout: 10m
+              exit_status: 0
+              context:
+                - runtime
+              command: |
+                sudo apt-get install -y charly &&
+                dpkg-query -W charly
+            - check: charly version equals the repo's published CalVer
+              id: ubuntu-charly-version
+              exit_status: 0
+              stdout:
+                - contains: UBUNTU-REPO-VERSION-OK
+              context:
+                - runtime
+              command: |
+                installed="$(/usr/bin/charly version)" &&
+                packaged="$(dpkg-query -W charly | awk '{print $2}')" &&
+                echo "installed=[$installed] packaged=[$packaged]" &&
+                test -n "$installed" && test -n "$packaged" &&
+                test "$installed" = "$packaged" &&
+                echo UBUNTU-REPO-VERSION-OK
+            - check: the welded command plugins dispatch project-less from /tmp
+              id: ubuntu-welded-command-project-less
+              exit_status: 0
+              stdout:
+                - contains: UBUNTU-WELDED-CMD-OK
+              context:
+                - runtime
+              command: |
+                cd /tmp &&
+                charly doctor 2>/dev/null | grep -q 'Summary:' &&
+                echo UBUNTU-WELDED-CMD-OK
