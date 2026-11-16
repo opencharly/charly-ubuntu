@@ -62,6 +62,19 @@ check-ubuntu-repo:
             allow_repo_changes: true
             allow_root_tasks: true
         plan:
+            # R7: prove the GUEST is the distribution this bed exists to track. Without
+            # this step the bed asserts only the install path, which a noble revert would
+            # also satisfy — the check has to fail without the change.
+            - check: |
+                command=grep -q 'VERSION_CODENAME=resolute' /etc/os-release &&
+                grep -q '26.04' /etc/os-release &&
+                echo GUEST-IS-RESOLUTE
+              id: guest-is-resolute
+              description: the booted guest reports Ubuntu 26.04 LTS (resolute) — not the retired noble baseline
+              exit_status: 0
+              context:
+                - runtime
+              timeout: 2m
             - check: curl + gnupg are available for the key import
               id: ubuntu-key-tooling
               timeout: 10m
