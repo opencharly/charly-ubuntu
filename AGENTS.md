@@ -41,7 +41,7 @@ Canonical files:
   per-repo candy gate**.
 - The manifest validates with `charly box validate` at the repo root.
 - The R10 bed is `charly check run check-ubuntu-repo` — it boots the disposable
-  Ubuntu 24.04 VM and installs the packaged charly from the PUBLISHED repo. The
+  Ubuntu 26.04 LTS VM and installs the packaged charly from the PUBLISHED repo. The
   artifact build/sign/install-test lives in `.github/workflows/build.yml`
   (manual dispatch with a release CalVer).
 
