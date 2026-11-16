@@ -1,7 +1,7 @@
 # charly-ubuntu — the Ubuntu package repository for charly.
 #
 # This project exists so this repo OWNS the R10 bed that proves its own
-# published artifact: check-ubuntu-repo boots a disposable Ubuntu 24.04 cloud
+# published artifact: check-ubuntu-repo boots a disposable Ubuntu 26.04 LTS cloud
 # VM, adds the published charly apt repo (opencharly.github.io/charly-ubuntu),
 # installs the packaged charly, and asserts the installed binary's version
 # equals the version the package manager recorded. The bed was relocated here
@@ -19,12 +19,12 @@ defaults:
         auto: false
         max_mb: 128
 
-# ubuntu-repo-vm — the disposable Ubuntu 24.04 cloud-image VM the bed boots.
+# ubuntu-repo-vm — the disposable Ubuntu 26.04 LTS cloud-image VM the bed boots.
 ubuntu-repo-vm:
     vm:
         source:
             kind: cloud_image
-            url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+            url: https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img
             base_user: ubuntu
             # REQUIRED, not decorative: sshUnitForDistro + composePackages are bare
             # lookups into the generated distro tables — nothing is inferred from
@@ -50,7 +50,14 @@ check-ubuntu-repo:
         disposable: true
         lifecycle: dev
         description: >-
-            Proves the repo-based install from the published charly-ubuntu apt repo (opencharly.github.io/charly-ubuntu) — the R10 acceptance for the nFPM packaging cutover's Ubuntu leg. Boots the disposable Ubuntu 24.04 (noble) cloud-image VM (ubuntu-repo-vm), installs the charly GPG key + adds the apt repo, `apt install charly`, asserts the PACKAGED /usr/bin/charly reports the same version the package manager recorded for the installed package, and proves the welded command plugins dispatch project-less from /tmp.
+            Proves the repo-based install from the published charly-ubuntu apt repo (opencharly.github.io/charly-ubuntu) — the R10 acceptance for the nFPM packaging cutover's Ubuntu leg. Boots the disposable Ubuntu 26.04 LTS (resolute) cloud-image VM (ubuntu-repo-vm), installs the charly GPG key + adds the apt repo, `apt install charly`, asserts the PACKAGED /usr/bin/charly reports the same version the package manager recorded for the installed package, and proves the welded command plugins dispatch project-less from /tmp.
+        add_candy:
+            # The bed deploys onto a VM, so the "vm" deploy substrate must be in this
+            # bed's own candy closure — measured: without it, `deploy add` fails with
+            # `the "vm" deploy substrate is not available in this project — its deploy
+            # plugin (plugin-deploy-vm) is not in the candy closure`. Same remedy, and
+            # same measured error, as distro-cachyos's VM beds.
+            - '@github.com/opencharly/plugin-deploy-vm/candy/plugin-deploy-vm:v2026.314.0712'
         install_opts:
             allow_repo_changes: true
             allow_root_tasks: true
