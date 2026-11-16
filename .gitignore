@@ -14,3 +14,7 @@ output/
 # Migration rollback backups (charly migrate writes <file>.bak.<unix-ts>)
 *.bak
 *.bak.*
+
+# VM build outputs the check beds generate inside the worktree (a bed run recreates
+# image/<vm>/{disk.qcow2,seed.iso,.build.stamp}; never commit them).
+image/
