@@ -65,11 +65,12 @@ check-ubuntu-repo:
             # R7: prove the GUEST is the distribution this bed exists to track. Without
             # this step the bed asserts only the install path, which a noble revert would
             # also satisfy — the check has to fail without the change.
-            - check: |
-                command=grep -q 'VERSION_CODENAME=resolute' /etc/os-release &&
-                grep -q '26.04' /etc/os-release &&
-                echo GUEST-IS-RESOLUTE
+            - check: the booted guest reports Ubuntu 26.04 LTS (resolute), not the retired noble baseline
               id: guest-is-resolute
+              command: |
+                  grep -q 'VERSION_CODENAME=resolute' /etc/os-release \
+                    && grep -q '26.04' /etc/os-release \
+                    && echo GUEST-IS-RESOLUTE
               description: the booted guest reports Ubuntu 26.04 LTS (resolute) — not the retired noble baseline
               exit_status: 0
               context:
