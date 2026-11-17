@@ -3,7 +3,7 @@
 The Ubuntu package repository for [charly](https://github.com/opencharly/charly) — the OpenCharly CLI and its composed toolchain, packaged as `.deb` for `amd64` and `arm64`.
 
 This repo owns the artifact **and the R10 bed that proves it**: the
-`check-ubuntu-repo` deploy boots a disposable Ubuntu 24.04 (noble) cloud VM, adds
+`check-ubuntu-repo` deploy boots a disposable Ubuntu 26.04 LTS (resolute) cloud VM, adds
 the published charly apt repo, installs the packaged `charly`, and asserts the
 installed binary's version equals the version the package manager recorded.
 
@@ -48,7 +48,7 @@ to GitHub Pages.
   the default-variant `plugin-<word>` set is served by the shared `charly-lib`
   host, and runs `charly doctor` from a non-project directory.
 - **R10 bed** `check-ubuntu-repo`: `charly check run check-ubuntu-repo` boots
-  the disposable Ubuntu 24.04 VM (UEFI), installs the packaged `charly` from the
+  the disposable Ubuntu 26.04 LTS VM (UEFI), installs the packaged `charly` from the
   PUBLISHED repo, and asserts the version match plus project-less plugin
   dispatch.
 
